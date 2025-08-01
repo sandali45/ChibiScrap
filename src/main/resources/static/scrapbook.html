@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>💖 Cute Scrapbook</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #fff0f6;
+            text-align: center;
+        }
+        h1 {
+            color: #ff69b4;
+            margin-bottom: 20px;
+        }
+        #canvas {
+            border: 2px dashed #ffb6c1;
+            background: white;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background: #ff69b4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #ff85c1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌸 My Cute Scrapbook 🌸</h1>
+    <input type="file" id="upload" />
+    <button onclick="exportPDF()">📄 Export PDF</button>
+    <button onclick="saveScrapbook()">💾 Save Scrapbook</button>
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+<script>
+    const canvas = new fabric.Canvas('canvas');
+
+    // Upload image and add to canvas
+    document.getElementById('upload').addEventListener('change', function(e){
+        const reader = new FileReader();
+        reader.onload = function(f) {
+            fabric.Image.fromURL(f.target.result, function(img) {
+                img.scale(0.3);
+                canvas.add(img);
+            });
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    });
+
+    // Export canvas as PDF
+    async function exportPDF(){
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        const dataUrl = canvas.toDataURL({format: 'png'});
+        pdf.addImage(dataUrl, 'PNG', 10, 10, 190, 140);
+        pdf.save("scrapbook.pdf");
+    }
+
+    // Save scrapbook layout JSON to backend
+    async function saveScrapbook(){
+        const layoutJson = JSON.stringify(canvas.toJSON());
+        const scrapbookData = {
+            title: "My Cute Scrapbook",
+            layoutJson: layoutJson
+        };
+        try {
+            const response = await fetch('/api/scrapbook', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(scrapbookData)
+            });
+            const text = await response.text();
+            alert(text);
+        } catch(err) {
+            alert("Error saving scrapbook");
+        }
+    }
+</script>
+</body>
+</html>
